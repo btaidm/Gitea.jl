@@ -44,7 +44,9 @@ function getResponse(c::Client, method::Function, path::String; kwargs...)
 end
 
 function getParsedResponse{T}(::Type{T}, c::Client, method::Function, path::String;kwargs...)
-	return convert(T,Requests.json(getResponse(c,method,path;kwargs...)))
+	resp = getResponse(c,method,path;kwargs...)
+	JSON.print(Requests.json(resp),2)
+	return convert(T,Requests.json(resp))
 end
 
 function getStatusCode(c::Client, method::Function, path::String; kwargs...)
