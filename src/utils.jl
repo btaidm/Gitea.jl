@@ -53,8 +53,12 @@ macro tag(t)
 			tagDict[tag.args[1]] = tagData
 		end
 	end
-
-	tagRegistry[Symbol(module_name(current_module()),".",tName)] = tagDict
+	currentMod = current_module()
+	if currentMod != Main
+		tagRegistry[Symbol(module_name(currentMod),".",tName)] = tagDict
+	else
+		tagRegistry[Symbol(tName)] = tagDict
+	end
 
 	return t
 end
@@ -68,19 +72,21 @@ end
 end
 
 
-marshallJSON{T}(data::T) = marshallJSON_impl(data)
+@generated marshallJSON{T}(data::T) = marshallJSON_impl(data)
 
-@generated function marshallJSON_impl{T}(data::T)
+function marshallJSON_impl(T)
 	if T <: Union{Number,AbstractString}
 		return :(data)
 	elseif T <: Vector
 		return :(map(marshallJSON,data))
 	else
 		tagData = FieldTags.queryTag(T,:json)
-		exprs = Expr[]
+		expr = quote
+		jsonData = Dict{String,Any}()
+		end
 		fields = fieldnames(T)
 
-		if isempty(fieldnames)
+		if isempty(fields)
 			error("Invalid Type")
 		end
 
@@ -88,28 +94,31 @@ marshallJSON{T}(data::T) = marshallJSON_impl(data)
 			fType = fieldtype(T,field)
 			fArgString = split(get(tagData,field,""),',')
 
-			fName = isspace(fArgString[1]) ? String(fName) : fArgString[1]
+			fName = isspace(fArgString[1]) ? String(fArgString[1]) : fArgString[1]
 			shift!(fArgString)
 			fArgs = Dict{String,Any}()
 
-			for arg in fArgString
-				sarg = split(arg,':')
-				if length(sarg) == 1
-					fArgs[sarg[1]] = nothing
-
-			end
-
-
 			if fType <: Nullable
-
+				expr = quote
+					$expr
+					!isnull(getfield(data,:($field))) && data["$(fName)"] = marshallJSON(get(getfield(data,:($field))))
+				end
 			else
-				push!(exprs,
-					quote
-						"$(fName)" => getfield(data,field)
-					end
-				)
+				println(field)
+				println(expr)
+				newexpr = :(data["$(fName)"] = marshallJSON(getfield(data, :($field) )))
+				println(newexpr)
+				expr = quote
+					$expr
+					$newexpr
+				end
 			end
 		end
+	end
+	return quote
+		$expr
+		return jsonData
+	end
 end
 
 unmarshallJSON{T}(::Type{T},data) = marshallJSON_impl(T,data)
