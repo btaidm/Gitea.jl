@@ -19,6 +19,10 @@ macro tag(t)
 
 	isMut = t.args[1]
 	tName = t.args[2]
+	if isa(tName,Expr)
+		tName.head != :curly && error("Type Name is not a curly type")
+		tName = tName.args[1]
+	end
 	fields = Any[]
 	tTags = Dict{Symbol,Expr}()
 	x = t.args[end].args
@@ -60,12 +64,18 @@ macro tag(t)
 		tagRegistry[Symbol(tName)] = tagDict
 	end
 
-	return t
+	return esc(t)
 end
 
 function queryTag{T}(::Type{T}, tagName::Symbol)
 	println(Symbol(T))
 	typeTags = tagRegistry[Symbol(T)]
+	return get(typeTags,tagName,Dict{Symbol,Any}())
+end
+
+function queryTag(sym::Symbol, tagName::Symbol)
+	println(sym)
+	typeTags = tagRegistry[sym]
 	return get(typeTags,tagName,Dict{Symbol,Any}())
 end
 
@@ -75,12 +85,13 @@ end
 @generated marshallJSON{T}(data::T) = marshallJSON_impl(data)
 
 function marshallJSON_impl(T)
+	println(T)
 	if T <: Union{Number,AbstractString}
 		return :(data)
 	elseif T <: Vector
 		return :(map(marshallJSON,data))
 	else
-		tagData = FieldTags.queryTag(T,:json)
+		tagData = FieldTags.queryTag(T.name.name,:json)
 		expr = quote
 		jsonData = Dict{String,Any}()
 		end
@@ -93,24 +104,20 @@ function marshallJSON_impl(T)
 		for field in fields
 			fType = fieldtype(T,field)
 			fArgString = split(get(tagData,field,""),',')
+			f = string(field)
 
-			fName = isspace(fArgString[1]) ? String(fArgString[1]) : fArgString[1]
+			fName = isspace(fArgString[1]) ? f : fArgString[1]
 			shift!(fArgString)
 			fArgs = Dict{String,Any}()
-
 			if fType <: Nullable
 				expr = quote
 					$expr
-					!isnull(getfield(data,:($field))) && data["$(fName)"] = marshallJSON(get(getfield(data,:($field))))
+					!isnull(getfield(data,:($field))) && jsonData[$(fName)] = marshallJSON(get(getfield(data,Symbol($f))))
 				end
 			else
-				println(field)
-				println(expr)
-				newexpr = :(data["$(fName)"] = marshallJSON(getfield(data, :($field) )))
-				println(newexpr)
 				expr = quote
 					$expr
-					$newexpr
+					jsonData[$(fName)] = marshallJSON(getfield(data, Symbol($f) ))
 				end
 			end
 		end
@@ -121,8 +128,9 @@ function marshallJSON_impl(T)
 	end
 end
 
-unmarshallJSON{T}(::Type{T},data) = marshallJSON_impl(T,data)
+@genarated unmarshallJSON{T}(::Type{T},data) = unmarshallJSON_impl(T,data)
 
-@generated function unmarshallJSON_impl{T}(::Type{T},data)
-	FieldTags.queryTag(typeof(data),:json)
+function unmarshallJSON_impl{T}(::Type{T},data)
+	println(T," ", data)
+
 end
