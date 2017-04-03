@@ -3,7 +3,7 @@
 Gitea User
 """
 FieldTags.@tag immutable User
-	id::Int64 => json:"id"
+	id::Int64
 	userName::String => json:"login"
 	fullName::String => json:"full_name"
 	email::String => json:"email"
@@ -123,20 +123,34 @@ immutable GPGKeyEmail
 	verified::Bool
 end
 
-immutable GPGKey
-	ID::Int64
-	primaryKeyID::String
-	keyID::String
-	publicKey::String
+FieldTags.@tag immutable GPGKey
+	id::Int64
+	primaryKeyID::String => json:"primary_key_id"
+	keyID::String => json:"key_id"
+	publicKey::String => json:"public_key"
 	emails::Vector{GPGKeyEmail}
-	subsKey::Vector{GPGKey}
-	canSign::Bool
-	canEncryptComms::Bool
-	canEncryptStorage::Bool
-	canCertify::Bool
-	created::DateTime
-	expires::DateTime
+	subkeys::Vector{GPGKey}
+	canSign::Bool => json:"can_sign"
+	canEncryptComms::Bool => json:"can_encrypt_comms"
+	canEncryptStorage::Bool => json:"can_encrypt_storage"
+	canCertify::Bool => json:"can_certify"
+	created::Nullable{DateTime} => json:"created_at,format:y-m-dTH:M:SZ"
+	expires::Nullable{DateTime} => json:"expires_at,format:y-m-dTH:M:SZ"
 end
+
+
+listGPGKeys(c::Client,user::String) = getParsedResponse(Vector{GPGKey},c,Requests.get,"/users/$(user)/gpg_keys")
+
+listMyGPGKeys(c::Client) = getParsedResponse(Vector{GPGKey},c,Requests.get,"/user/gpg_keys")
+
+getGPGKey(c::Client,id::Int64) = getParsedResponse(GPGKey,c,Requests.get,"/user/gpg_keys/$(id)")
+
+function createPublicKey(c::Client,key::String)
+	data = Dict{String,Any}("armored_public_key"=>key)
+	return getParsedResponse(PublicKey,c,Requests.post,"/user/gpg_keys";json = data)
+end
+
+deleteGPGKey(c::Client,keyID::Int64) = (getResponse(c,Requests.delete,"/user/gpg_keys/$(keyID)"); nothing)
 
 ####################
 ### User SSH Key ###
@@ -150,7 +164,7 @@ FieldTags.@tag immutable PublicKey
 	create::Nullable{DateTime} => json:"created_at,format:y-m-dTH:M:SZ"
 end
 
-listPublicKeys(c::Client,user::String) = getParsedResponse(Vector{PublicKey},c,Requests.get,"/user/$(user)/keys")
+listPublicKeys(c::Client,user::String) = getParsedResponse(Vector{PublicKey},c,Requests.get,"/users/$(user)/keys")
 
 listMyPublicKeys(c::Client) = getParsedResponse(Vector{PublicKey},c,Requests.get,"/user/keys")
 
