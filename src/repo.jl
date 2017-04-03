@@ -1,37 +1,3 @@
-####################
-### Repositories ###
-####################
-
-immutable Permission
-	admin::Bool
-	push::Bool
-	pull::Bool
-end
-
-FieldTags.@tag immutable Repository
-	id::Int64
-	owner::User
-	name::String
-	fullName::String => json:"full_name"
-	description::String
-	private::Bool
-	fork::Bool
-	mirror::Bool
-	htmlURL::String => json:"html_url"
-	sshURL::String => json:"ssh_url"
-	cloneURL::String => json:"clone_url"
-	website::String
-	stars::Int => json:"stars_count"
-	forks::Int => json:"forks_count"
-	watchers::Int => json:"watchers_count"
-	openIssues::Int => json:"open_issues_count"
-	defaultBranch::String => json:"default_branch"
-	created::DateTime => json:"created_at,format:y-m-dTH:M:SZ"
-	updated::DateTime => json:"updated_at,format:y-m-dTH:M:SZ"
-	permissions::Nullable{Permission}
-end
-
-
 listMyRepos(c::Client) = getParsedResponse(Vector{Repository},c,Requests.get,"/user/repos")
 
 listUserRepos(c::Client, user::String) = getParsedResponse(Vector{Repository},c,Requests.get,"/user/$(user)/repos")
@@ -95,5 +61,4 @@ end
 
 
 migrateRepo(c::Client, opt::MigrateRepoOption) = getParsedResponse(Repository,c,Requests.post,"/repos/migrate"; json = marshalJSON(opt))
-
 

@@ -83,10 +83,12 @@ end
 @generated marshalJSON{T}(data::T) = marshalJSON_impl(data)
 
 function marshalJSON_impl(T)
-	if T <: Union{Number,AbstractString}
+	if T <: Union{Number,AbstractString,}
 		return :(data)
 	elseif T <: Vector
 		return :(map(marshalJSON,data))
+	elseif T <: Dict{String}
+		return :(Dict( (k=>marshalJSON(v) for (k,v) in data)))
 	else
 		tagData = try
 				FieldTags.queryTag(getfield(T.name.module,T.name.name),:json)

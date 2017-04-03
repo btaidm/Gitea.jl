@@ -1,42 +1,12 @@
-
-"""
-Gitea User
-"""
-FieldTags.@tag immutable User
-	id::Int64
-	userName::String => json:"login"
-	fullName::String => json:"full_name"
-	email::String => json:"email"
-	avatarURL::String => json:"avatar_url"
-end
-
-# function Base.convert(::Type{User}, data::Dict{String,Any})
-# 	id = data["id"]
-# 	userName = get(data,"login",data["username"])
-# 	fullName = data["full_name"]
-# 	email = data["email"]
-# 	avatarURL = data["avatar_url"]
-# 	return User(id,userName,fullName,email,avatarURL)
-# end
+#################
+### User Info ###
+#################
 
 getUserInfo(c::Client, user::String) = getParsedResponse(User,c,Requests.get,"/users/$(user)")
-
 
 ##########################
 ### Application Tokens ###
 ##########################
-
-"""
-AccessToken represents a API access token.
-"""
-immutable AccessToken
-	name::String
-	sha1::String
-end
-
-# function Base.convert(::Type{AccessToken}, data::Dict{String,Any})
-# 	return AccessToken(data["name"],data["sha1"])
-# end
 
 listAccessTokens(c::Client, user::String,pass::String) = getParsedResponse(Vector{AccessToken},c,Requests.get,"/users/$(user)/tokens"; headers = Dict("Authorization" => "Basic $(base64encode("$(user):$(pass)"))"))
 
@@ -49,16 +19,6 @@ end
 ####################
 ### User E-mails ###
 ####################
-
-immutable Email
-	email::String
-	verified::Bool
-	primary::Bool
-end
-
-# function Base.convert(::Type{Email}, data::Dict{String,Any})
-# 	return Email(data["email"],data["verified"],data["primary"])
-# end
 
 function listEmails(c::Client)
 	getParsedResponse(Vector{Email},c,Requests.get,"/user/emails")
@@ -113,31 +73,9 @@ follow(c::Client,target::String) = (getResponse(c, Requests.put, "/user/followin
 
 unfollow(c::Client,target::String) = (getResponse(c, Requests.delete, "/user/following/$(target)"); nothing)
 
-
 ####################
 ### User GPG Key ###
 ####################
-
-immutable GPGKeyEmail
-	email::String
-	verified::Bool
-end
-
-FieldTags.@tag immutable GPGKey
-	id::Int64
-	primaryKeyID::String => json:"primary_key_id"
-	keyID::String => json:"key_id"
-	publicKey::String => json:"public_key"
-	emails::Vector{GPGKeyEmail}
-	subkeys::Vector{GPGKey}
-	canSign::Bool => json:"can_sign"
-	canEncryptComms::Bool => json:"can_encrypt_comms"
-	canEncryptStorage::Bool => json:"can_encrypt_storage"
-	canCertify::Bool => json:"can_certify"
-	created::Nullable{DateTime} => json:"created_at,format:y-m-dTH:M:SZ"
-	expires::Nullable{DateTime} => json:"expires_at,format:y-m-dTH:M:SZ"
-end
-
 
 listGPGKeys(c::Client,user::String) = getParsedResponse(Vector{GPGKey},c,Requests.get,"/users/$(user)/gpg_keys")
 
@@ -156,14 +94,6 @@ deleteGPGKey(c::Client,keyID::Int64) = (getResponse(c,Requests.delete,"/user/gpg
 ### User SSH Key ###
 ####################
 
-FieldTags.@tag immutable PublicKey
-	id::Int64
-	key::String
-	url::Nullable{String}
-	title::Nullable{String}
-	create::Nullable{DateTime} => json:"created_at,format:y-m-dTH:M:SZ"
-end
-
 listPublicKeys(c::Client,user::String) = getParsedResponse(Vector{PublicKey},c,Requests.get,"/users/$(user)/keys")
 
 listMyPublicKeys(c::Client) = getParsedResponse(Vector{PublicKey},c,Requests.get,"/user/keys")
@@ -176,3 +106,4 @@ function createPublicKey(c::Client,title::String,key::String)
 end
 
 deletePublicKey(c::Client,keyID::Int64) = (getResponse(c,Requests.delete,"/user/keys/$(keyID)"); nothing)
+
