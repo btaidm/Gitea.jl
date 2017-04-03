@@ -7,6 +7,9 @@ import JSON
 
 export Client
 
+DEBUG = false
+
+
 include("utils.jl")
 include("errors.jl")
 include("client.jl")
