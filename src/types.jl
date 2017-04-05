@@ -170,9 +170,9 @@ FieldTags.@tag immutable Hook
 	updated::DateTime => json:"updated_at,format:y-m-dTH:M:SZ"
 end
 
-################
+#####################
 ### Hook Payloads ###
-################
+#####################
 
 immutable UserPayload
 	name::String
@@ -197,3 +197,85 @@ immutable CommitPayload
 	timestamp::DateTime => json:",format:y-m-dTH:M:SZ"
 end
 
+#########################
+### Repository Branch ###
+#########################
+
+immutable Branch
+	name::String
+	commit::CommitPayload
+end
+
+#############################
+### Repository Deploy Key ###
+#############################
+
+FieldTags.@tag immutable DeployKey
+	id::Int64
+	key::String
+	url::String
+	title::String
+	created::DateTime => json:"created_at,format:y-m-dTH:M:SZ"
+	readonly::Bool => json:"read_only"
+end
+
+####################
+### Organization ###
+####################
+
+FieldTags.@tag immutable Organization
+	id::Int64
+	username::String
+	fullName::String => json:"full_name"
+	avatarURL::String => json:"avatar_url"
+	description::String
+	website::String
+	location::String
+end
+
+immutable Team
+	id::Int64
+	name::String
+	description::String
+	permission::String
+end
+
+####################
+### Pull Request ###
+####################
+
+FieldTags.@tag immutable PRBranchInfo
+	name::String
+	ref::String
+	sha::String
+	repoID::Int64 => json:"repo_id"
+	repo::Repository
+end
+
+FieldTags.@tag immutable PullRequest
+	id::Int64
+	url::String
+	index::Int64
+	poster::User => json:"user"
+	title::String
+	body::String
+	labels::Vector{Label}
+	milestone::Milestone
+	assignee::User
+	state::StateType
+	comments::Int
+
+	htmlURL::String => json:"html_url"
+	diffURL::String => json:"diff_url"
+	patchURL::String => json:"patch_url"
+
+	mergeable::Bool
+	hasMerged::Bool
+	merged::DataTime => json:"merged_at,format:y-m-dTH:M:SZ"
+	mergedCommitID::String => json:"merge_commit_sha"
+	mergedBy::User => json:"merged_by"
+
+	base::PRBranchInfo
+	head::PRBranchInfo
+	mergeBase::String => json:"merge_base"
+end
