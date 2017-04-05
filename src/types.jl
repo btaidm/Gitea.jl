@@ -279,3 +279,56 @@ FieldTags.@tag immutable PullRequest
 	head::PRBranchInfo
 	mergeBase::String => json:"merge_base"
 end
+
+###############
+### Release ###
+###############
+
+FieldTags.@tag immutable Release
+	id::Int64
+	tagName::String => json:"name"
+	target::String => json:"target_commitish"
+	title::String => json:"name"
+	note::String => json:"body"
+	url::String
+	tarURL::String => json:"tarball_url"
+	zipURL::String => json:"zipball_url"
+	isDraft::Bool => json:"draft"
+	isPrerelease::Bool => json:"prelease"
+	createdAt::DateTime => json:"created_at,format:y-m-dTH:M:SZ"
+	publishedAt::DateTime => json:"published_at,format:y-m-dTH:M:SZ"
+	publisher::User => json:"author"
+end
+
+##############
+### Status ###
+##############
+
+const StatusState = String
+const StatusPending = "pending"
+const StatusSuccess = "success"
+const StatusError   = "error"
+const StatusFailure = "failure"
+const StatusWarning = "warning"
+
+FieldTags.@tag immutable Status
+	id::Int64
+	state::StatusState
+	targetURL::String => json:"target_url"
+	description::String
+	url::String
+	context::String
+	creator::User
+	created::DateTime => json:"created_at,format:y-m-dTH:M:SZ"
+	updated::DateTime => json:"updated_at,format:y-m-dTH:M:SZ"
+end
+
+FieldTags.@tag immutable CombinedStatus
+	state::StatusState
+	sha::String
+	totalCount::Int => json:"total_count"
+	statuses::Vector{Status}
+	repository::Repository
+	commitURL::String => json:"commit_url"
+	url::String
+end
