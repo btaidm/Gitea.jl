@@ -81,7 +81,7 @@ const StateClosed = "closed"
 
 FieldTags.@tag immutable PullRequestMeta
 	hasMerged::Bool => json:"merged"
-	merged::DataTime => json:"merged_at,format:y-m-dTH:M:SZ"
+	merged::DateTime => json:"merged_at,format:y-m-dTH:M:SZ"
 end
 
 
@@ -100,8 +100,8 @@ FieldTags.@tag immutable Milestone
 	state::StateType
 	openIssues::Int => json:"open_issues"
 	closedIssues::Int => json:"closed_issues"
-	closed::DataTime => json:"closed_at,format:y-m-dTH:M:SZ"
-	deadline::DataTime => json:"due_on,format:y-m-dTH:M:SZ"
+	closed::DateTime => json:"closed_at,format:y-m-dTH:M:SZ"
+	deadline::DateTime => json:"due_on,format:y-m-dTH:M:SZ"
 end
 
 FieldTags.@tag immutable Issue
@@ -112,14 +112,14 @@ FieldTags.@tag immutable Issue
 	title::String
 	body::String
 	labels::Vector{Label}
-	milestone::Milestone
-	assignee::User
+	milestone::Nullable{Milestone}
+	assignee::Nullable{User}
 	state::StateType
 	comments::Int
 	created::DateTime => json:"created_at,format:y-m-dTH:M:SZ"
 	updated::DateTime => json:"updated_at,format:y-m-dTH:M:SZ"
 
-	pullRequest::PullRequestMeta => json:"pull_request"
+	pullRequest::Nullable{PullRequestMeta} => json:"pull_request"
 end
 
 ####################
@@ -187,13 +187,13 @@ immutable CommitVerificationPayload
 	payload::String
 end
 
-immutable CommitPayload
+FieldTags.@tag immutable CommitPayload
 	id::String
 	message::String
 	url::String
 	author::UserPayload
-	commiter::UserPayload
-	verification::CommitVerificationPayload
+	committer::UserPayload
+	verification::Nullable{CommitVerificationPayload}
 	timestamp::DateTime => json:",format:y-m-dTH:M:SZ"
 end
 
@@ -271,7 +271,7 @@ FieldTags.@tag immutable PullRequest
 
 	mergeable::Bool
 	hasMerged::Bool
-	merged::DataTime => json:"merged_at,format:y-m-dTH:M:SZ"
+	merged::DateTime => json:"merged_at,format:y-m-dTH:M:SZ"
 	mergedCommitID::String => json:"merge_commit_sha"
 	mergedBy::User => json:"merged_by"
 
