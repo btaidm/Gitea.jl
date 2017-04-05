@@ -62,3 +62,62 @@ end
 
 migrateRepo(c::Client, opt::MigrateRepoOption) = getParsedResponse(Repository,c,Requests.post,"/repos/migrate"; json = marshalJSON(opt))
 
+################
+### Branches ###
+################
+
+listRepoBranches(c::Client, user::String, repo::String) = getParsedResponse(Vector{Branch},c,Requests.get,"/repos/$(user)/$(repo)/branches")
+
+listRepoBranches(c::Client, repo::Repository) = listRepoBranches(c,repo.owner.userName,repo.name)
+
+getRepoBranch(c::Client, user::String, repo::String, branch::String) = getParsedResponse(Branch,c,Requests.get,"/repos/$(user)/$(repo)/branches/$(branch)")
+
+getRepoBranch(c::Client, repo::Repository, branch::String) = listRepoBranches(c,repo.owner.userName,repo.name,branch)
+
+####################
+### Collaborator ###
+####################
+
+listCollaborators(c::Client, user::String, repo::String) = getParsedResponse(Vector{User},c,Requests.get,"/repos/$(user)/$(repo)/collaborators")
+
+function isCollaborator(c::Client, user::String, repo::String, collaborator::String)
+	code = getStatusCode(c,Requests.get,"/repos/$(user)/$(repo)/collaborators/$(collaborator)")
+	return code == 204
+end
+
+function addCollaborator(c::Client, user::String, repo::String, collaborator::String, permission::String)
+	data = Dict("permission" => permission)
+	getResponse(c,Requests.post,"/repos/$(user)/$(repo)/collaborators/$(collaborator)";json = data)
+	return nothing
+end
+
+deleteCollaborator(c::Client, user::String, repo::String, collaborator::String) = (getResponse(Repository,c,Requests.delete,"/repos/$(user)/$(repo)/collaborators/$(collaborator)"); nothing)
+
+############
+### File ###
+############
+
+function getFile(c::Client, user::String, repo::String, ref::String, tree::String)
+	f = getResponse(c,Requests.get,"/repos/$(user)/$(repo)/raw/$(ref)/$(tree)")
+	IOBuffer(Requests.bytes(f))
+end
+
+getFile(c::Client, repo::Repository, ref::String, tree::String) = listRepoBranches(c,repo.owner.userName,repo.name,ref,tree)
+
+
+##################
+### Deploy Key ###
+##################
+
+listDeployKeys(c::Client, user::String, repo::String) = getParsedResponse(Vector{DeployKey},c,Requests.get,"/repos/$(user)/$(repo)/keys")
+
+getDeployKey(c::Client, user::String, repo::String, keyID::Int64) = getParsedResponse(DeployKey,c,Requests.get,"/repos/$(user)/$(repo)/keys/$(keyID)")
+
+function createDeployKey(c::Client, user::String, repo::String, title::String, key::String)
+	data = Dict("title" => title, "key" => key)
+	getParsedResponse(DeployKey,c,Requests.put,"/repos/$(user)/$(repo)/keys"; json = data)
+end
+
+deleteDeployKey(c::Client, user::String, repo::String, keyID::Int64) = (getResponse(c,Requests.delete,"/repos/$(user)/$(repo)/keys/$(keyID)"); nothing)
+
+
