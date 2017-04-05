@@ -112,6 +112,9 @@ function marshalJSON_impl(T)
 			fName = isspace(fArgString[1]) ? f : fArgString[1]
 			shift!(fArgString)
 
+
+			fArgs = Dict{String,Nullable{String}}()
+
 			for fArg in fArgString
 				fA = split(fArg,':'; limit = 2)
 				if length(fA) == 1
@@ -199,7 +202,6 @@ function unmarshalJSON_impl{T}(::Type{T},data)
 
 			if fType <: Nullable
 
-
 				if fType.parameters[1] <: Dates.TimeType
 					dFormat = get(get(fArgs,"format",Nullable{String}("y-m-dTH:M:S")))
 					getexpr = :($(fType.parameters[1])(data[$fName],$(dFormat)))
@@ -208,7 +210,7 @@ function unmarshalJSON_impl{T}(::Type{T},data)
 				end
 
 				expr = quote
-					haskey(data,$fName) ? $(getexpr) : Nullable{$(fType.parameters[1])}()
+					haskey(data,$fName) && (data[$fName] != nothing) ? $(getexpr) : Nullable{$(fType.parameters[1])}()
 				end
 				push!(exprs,expr);
 			else
