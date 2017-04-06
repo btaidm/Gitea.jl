@@ -249,19 +249,19 @@ FieldTags.@tag immutable PRBranchInfo
 	ref::String
 	sha::String
 	repoID::Int64 => json:"repo_id"
-	repo::Repository
+	repo::Nullable{Repository}
 end
 
 FieldTags.@tag immutable PullRequest
 	id::Int64
 	url::String
 	index::Int64
-	poster::User => json:"user"
+	poster::Nullable{User} => json:"user"
 	title::String
 	body::String
 	labels::Vector{Label}
-	milestone::Milestone
-	assignee::User
+	milestone::Nullable{Milestone}
+	assignee::Nullable{User}
 	state::StateType
 	comments::Int
 
@@ -271,12 +271,12 @@ FieldTags.@tag immutable PullRequest
 
 	mergeable::Bool
 	hasMerged::Bool
-	merged::DateTime => json:"merged_at,format:y-m-dTH:M:SZ"
-	mergedCommitID::String => json:"merge_commit_sha"
-	mergedBy::User => json:"merged_by"
+	merged::Nullable{DateTime} => json:"merged_at,format:y-m-dTH:M:SZ"
+	mergedCommitID::Nullable{String} => json:"merge_commit_sha"
+	mergedBy::Nullable{User} => json:"merged_by"
 
-	base::PRBranchInfo
-	head::PRBranchInfo
+	base::Nullable{PRBranchInfo}
+	head::Nullable{PRBranchInfo}
 	mergeBase::String => json:"merge_base"
 end
 
