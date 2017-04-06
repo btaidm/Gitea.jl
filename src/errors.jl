@@ -5,5 +5,13 @@ immutable GiteaError <: Exception
 end
 
 function Base.show(io::IO,err::GiteaError)
-    show(io, "Gitea Error: Error Code: $(err.code) Error Msg: $(JSON.json(err.msg))")
+	if isa(err.msg,String)
+		msg = err.msg
+	elseif isa(err.msg,Vector)
+		msg = err.msg[1]["message"]
+	else
+		msg = err.msg["message"]
+	end
+	print(io, "Gitea Error:\tError Code: $(err.code)\tError Msg: \"$(JSON.json(err.msg))\"")
+
 end

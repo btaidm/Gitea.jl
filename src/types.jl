@@ -100,8 +100,8 @@ FieldTags.@tag immutable Milestone
 	state::StateType
 	openIssues::Int => json:"open_issues"
 	closedIssues::Int => json:"closed_issues"
-	closed::DateTime => json:"closed_at,format:y-m-dTH:M:SZ"
-	deadline::DateTime => json:"due_on,format:y-m-dTH:M:SZ"
+	closed::Nullable{DateTime} => json:"closed_at,format:y-m-dTH:M:SZ"
+	deadline::Nullable{DateTime} => json:"due_on,format:y-m-dTH:M:SZ"
 end
 
 FieldTags.@tag immutable Issue
@@ -121,6 +121,18 @@ FieldTags.@tag immutable Issue
 
 	pullRequest::Nullable{PullRequestMeta} => json:"pull_request"
 end
+
+FieldTags.@tag immutable Comment
+	id::Int64
+	htmlURL::String => json:"html_url"
+	prURL::String => json:"pull_request_url"
+	issueURL::String => json:"issue_url"
+	poster::Nullable{User}
+	body::String
+	created::DateTime => json:"created_at,format:y-m-dTH:M:SZ"
+	updated::DateTime => json:"updated_at,format:y-m-dTH:M:SZ"
+end
+
 
 ####################
 ### Repositories ###

@@ -34,6 +34,8 @@ end
 
 createIssue(c::Client,owner::String,repo::String,opt::CreateIssueOption) = getParsedResponse(Issue,c,Requests.post,"/repos/$(owner)/$(repo)/issues"; json = marshalJSON(opt))
 
+createIssue(c::Client,repo::Repository,opt::CreateIssueOption) = createIssue(c,repo.owner.userName,repo.name,opt)
+
 FieldTags.@tag immutable EditIssueOption
 	title::Nullable{String}
 	body::Nullable{String}
@@ -65,6 +67,8 @@ listRepoComments(c::Client,owner::String, repo::String) = getParsedResponse(Vect
 
 createIssueComment(c::Client,owner::String, repo::String, index::Int64,body::String) = getParsedResponse(Comment,c,Requests.post,"/repos/$(owner)/$(repo)/issues/$(index)/comments"; json = Dict("body" => body))
 
+createIssueComment(c::Client,repo::Repository,issue::Issue,body) = createIssueComment(c,repo.owner.userName,repo.name,issue.index,body)
+
 editIssueComment(c::Client,owner::String, repo::String, index::Int64, commentID::Int64, body::String) = getParsedResponse(Comment,c,Requests.patch,"/repos/$(owner)/$(repo)/issues/$(index)/comments/$(commentID)"; json = Dict("body" => body))
 
 deleteIssueComment(c::Client,owner::String, repo::String, index::Int64, commentID::Int64) = ( getResponse(c,Requests.delete,"/repos/$(owner)/$(repo)/issues/$(index)/comments/$(commentID)"); nothing)
@@ -76,9 +80,14 @@ deleteIssueComment(c::Client,owner::String, repo::String, index::Int64, commentI
 
 listRepoLabels(c::Client, owner::String, repo::String) = getParsedResponse(Vector{Label},c,Requests.get,"/repos/$(owner)/$(repo)/labels")
 
-listRepoLabel(c::Client, owner::String, repo::String, index::Int64) = getParsedResponse(Label,c,Requests.get,"/repos/$(owner)/$(repo)/labels/$(index)")
+listRepoLabels(c::Client, repo::Repository) = listRepoLabels(c,repo.owner.userName,repo.name)
+
+getRepoLabel(c::Client, owner::String, repo::String, index::Int64) = getParsedResponse(Label,c,Requests.get,"/repos/$(owner)/$(repo)/labels/$(index)")
 
 createLabel(c::Client, owner::String, repo::String, name::String, color::String) = getParsedResponse(Label,c,Requests.post,"/repos/$(owner)/$(repo)/labels"; json = Dict("name" => name, "color" => color))
+
+createLabel(c::Client, repo::Repository, name::String, color::String) = createLabel(c,repo.owner.userName,repo.name, name, color)
+
 
 FieldTags.@tag immutable EditLabelOption
 	name::Nullable{String}
@@ -116,6 +125,9 @@ deleteIssueLabels(c::Client,owner::String, repo::String, index::Int64) = ( getRe
 
 listRepoMilestones(c::Client, owner::String, repo::String) = getParsedResponse(Vector{Milestone},c,Requests.get,"/repos/$(owner)/$(repo)/milestones")
 
+listRepoMilestones(c::Client, repo::Repository) = listRepoMilestones(c,repo.owner.userName,repo.name)
+
+
 listRepoMilestone(c::Client, owner::String, repo::String, index::Int64) = getParsedResponse(Milestone,c,Requests.get,"/repos/$(owner)/$(repo)/milestones/$(index)")
 
 FieldTags.@tag immutable CreateMilestoneOption
@@ -135,6 +147,8 @@ function CreateMilestoneOption(title;kwargs...)
 end
 
 createMilestone(c::Client, owner::String, repo::String, opt::CreateMilestoneOption) = getParsedResponse(Milestone,c,Requests.post,"/repos/$(owner)/$(repo)/milestones"; json = marshalJSON(opt))
+
+createMilestone(c::Client, repo::Repository, opt) = createMilestone(c,repo.owner.userName,repo.name,opt)
 
 FieldTags.@tag immutable EditMilestoneOption
 	title::Nullable{String}

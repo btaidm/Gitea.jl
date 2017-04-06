@@ -2,6 +2,8 @@
 ### User Info ###
 #################
 
+getUserInfo(c::Client) = getParsedResponse(User,c,Requests.get,"/user")
+
 getUserInfo(c::Client, user::String) = getParsedResponse(User,c,Requests.get,"/users/$(user)")
 
 ##########################

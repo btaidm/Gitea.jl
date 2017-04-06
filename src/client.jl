@@ -37,6 +37,7 @@ function getResponse(c::Client, method::Function, path::String; kwargs...)
 
 	if status÷100 != 2
 		errMap = Requests.json(resp)
+		DEBUG && JSON.print(errMap,2)
 		throw(GiteaError(status,errMap))
 	end
 

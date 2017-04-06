@@ -17,7 +17,7 @@ end
 function CreateRepoOption(name; kwargs...)
 	kwargsDict = Dict{Symbol,Any}(k=>v for (k,v) in kwargs)
 
-	args = [name]
+	args = Any[name]
 
 	for field in fieldnames(CreateRepoOption)[2:end]
 		push!(args,get(kwargsDict,field, fieldtype(CreateRepoOption,field)()))
@@ -26,14 +26,20 @@ function CreateRepoOption(name; kwargs...)
 	CreateRepoOption(args...)
 end
 
-CreateRepoOption(name::String) = CreateRepoOption(name,map(x->fieldtype(CreateRepoOption,x)(),fieldnames(CreateRepoOption)[2:end])...)
-
 createRepo(c::Client,opt::CreateRepoOption) = getParsedResponse(Repository,c,Requests.post,"/user/repos"; json = marshalJSON(opt))
 createOrgRepo(c::Client, org::String, opt::CreateRepoOption) = getParsedResponse(Repository,c,Requests.post,"/org/$(org)/repos"; json = marshalJSON(opt))
 
 getRepo(c::Client, owner::String, repo::String) = getParsedResponse(Repository,c,Requests.get,"/repos/$owner/$repo")
 
-deleteRepo(c::Client, owner::String, repo::String) = (getResponse(Repository,c,Requests.delete,"/repos/$owner/$repo"); nothing)
+getRepo(c::Client, owner::User, repo::String) = getRepo(c,owner.userName,repo)
+
+getRepo(c::Client, index::Int) = getParsedResponse(Repository,c,Requests.get,"/repositories/$(index)")
+
+deleteRepo(c::Client, owner::String, repo::String) = (getResponse(c,Requests.delete,"/repos/$owner/$repo"); nothing)
+
+deleteRepo(c::Client, owner::User, repo::String) = deleteRepo(c,owner.userName,repo)
+
+deleteRepo(c::Client, repo::Repository) = deleteRepo(c,repo.owner,repo.name)
 
 
 FieldTags.@tag immutable MigrateRepoOption
@@ -46,11 +52,10 @@ FieldTags.@tag immutable MigrateRepoOption
 	private::Nullable{Bool}
 	description::Nullable{String}
 end
-
-function MigrateRepoOption(cloneAddr,uid,name; kwargs...)
+ function MigrateRepoOption(cloneAddr,uid,name; kwargs...)
 	kwargsDict = Dict{Symbol,Any}(k=>v for (k,v) in kwargs)
 
-	args = [cloneAddr,uid,name]
+	args = Any[cloneAddr,uid,name]
 
 	for field in fieldnames(MigrateRepoOption)[4:end]
 		push!(args,get(kwargsDict,field, fieldtype(MigrateRepoOption,field)()))
